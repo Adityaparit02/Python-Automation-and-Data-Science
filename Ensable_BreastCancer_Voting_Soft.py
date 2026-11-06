@@ -1,0 +1,102 @@
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+from sklearn.metrics import accuracy_score,confusion_matrix
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+
+from sklearn.ensemble import VotingClassifier
+
+############################################################################
+#Step 1 : Load the Dataset
+############################################################################
+
+df = pd.read_csv("breast_cancer.csv")
+
+
+print("Shape of Dataset : ", df.shape)
+print("First Few Records")
+print(df.head())
+
+
+############################################################################
+#Step 2 : Seperate Features and Labels
+############################################################################
+
+X = df.drop("target",axis=1)
+Y = df["target"]
+
+print("X Shape :",X.shape)
+print("Y Shape :",Y.shape)
+
+
+############################################################################
+#Step 3 : Split Dataset for Training and Testing
+############################################################################
+
+X_train , X_test , Y_train ,Y_test = train_test_split(X,
+                                                      Y,
+                                                      test_size=0.2,
+                                                      random_state=42) 
+
+
+############################################################################
+#Step 4 : Scale the Features
+############################################################################
+
+Scalar = StandardScaler()
+
+X_train = Scalar.fit_transform(X_train)
+X_test = Scalar.fit_transform(X_test)
+
+
+############################################################################
+#Step 5.1 : Create Individual Model
+############################################################################
+
+Log_Model = LogisticRegression(max_iter=1000)
+Det_Model = DecisionTreeClassifier(random_state=42)
+KNN_Model = KNeighborsClassifier(n_neighbors=5)
+
+
+############################################################################
+#Step 5.2 : Create Voting Model
+############################################################################
+
+Model = VotingClassifier(estimators= [
+    ('logistic',Log_Model),
+    ('decision_tree',Det_Model),
+    ('knn' , KNN_Model)],
+    voting="hard")
+
+
+
+############################################################################
+#Step 6 : Train Model
+############################################################################
+Model = Model.fit(X_train,Y_train)
+
+
+############################################################################
+#Step 7 : Test the Model
+############################################################################
+
+Y_Pred = Model.predict(X_test)
+
+############################################################################
+#Step 8 : Evaluate the Model
+############################################################################
+
+print("-"*70)
+accuracy = accuracy_score(Y_test,Y_Pred)
+print("Accuracy of Model is : ",accuracy*100)
+print("-"*70)
+print("-"*70)
+
+print("Confusion Matrix : ")
+print(confusion_matrix(Y_test,Y_Pred))
+print("-"*70)
